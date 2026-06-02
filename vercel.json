@@ -2,9 +2,6 @@
   "buildCommand": "echo 'Build complete'",
   "framework": null,
   "public": true,
-  "env": {
-    "ANTHROPIC_API_KEY": "@anthropic-api-key"
-  },
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs18.x"
