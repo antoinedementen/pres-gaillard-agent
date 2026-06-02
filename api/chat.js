@@ -124,35 +124,24 @@ Subtly identify which phase the guest is in:
 - Encourage guests to explore the region`
 };
 
-exports.handler = async (event) => {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
-  };
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers };
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
   }
 
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { message, language = 'fr', questionHistory = [] } = JSON.parse(event.body || '{}');
+    const { message, language = 'fr', questionHistory = [] } = req.body || {};
 
     if (!message || typeof message !== 'string') {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Message is required' })
-      };
+      return res.status(400).json({ error: 'Message is required' });
     }
 
     const lang = ['fr', 'nl', 'en'].includes(language) ? language : 'fr';
@@ -161,11 +150,7 @@ exports.handler = async (event) => {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       console.error('ANTHROPIC_API_KEY not set');
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'API key not configured' })
-      };
+      return res.status(500).json({ error: 'API key not configured' });
     }
 
     const learningContext = questionHistory.length > 0
@@ -176,20 +161,12 @@ exports.handler = async (event) => {
 
     const response = await callClaudeAPI(message, enhancedPrompt, apiKey);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ reply: response })
-    };
+    return res.status(200).json({ reply: response });
   } catch (error) {
     console.error('Error:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: error.message || 'Internal server error' })
-    };
+    return res.status(500).json({ error: error.message || 'Internal server error' });
   }
-};
+}
 
 function callClaudeAPI(userMessage, systemPrompt, apiKey) {
   return new Promise((resolve, reject) => {
