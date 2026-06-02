@@ -34,73 +34,31 @@
             overflow: hidden;
         }
 
-        /* Language Modal */
-        .language-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+        /* Language Selector */
+        .lang-flags {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
+            gap: 8px;
         }
 
-        .language-modal.hidden {
-            display: none;
-        }
-
-        .language-modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            max-width: 400px;
-        }
-
-        .language-modal-content h2 {
-            margin-bottom: 10px;
-            color: #333;
-            font-size: 24px;
-        }
-
-        .language-modal-content p {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .language-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-        }
-
-        .lang-btn {
-            padding: 20px 10px;
-            border: 2px solid #ddd;
-            background: white;
-            border-radius: 8px;
+        .lang-flag-btn {
+            font-size: 20px;
+            background: none;
+            border: 2px solid transparent;
             cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 4px;
             transition: all 0.2s;
-            font-size: 14px;
-            font-weight: 500;
+            opacity: 0.6;
         }
 
-        .lang-btn:hover {
-            border-color: #1b5e20;
-            background: #f0f8f5;
-            transform: translateY(-2px);
+        .lang-flag-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.2);
         }
 
-        .lang-btn .flag {
-            font-size: 32px;
-            margin-bottom: 8px;
-            display: block;
+        .lang-flag-btn.active {
+            opacity: 1;
+            border-color: white;
         }
 
         /* Header */
@@ -144,21 +102,6 @@
             border-radius: 50%;
             background: #4caf50;
             animation: pulse 2s infinite;
-        }
-
-        .lang-selector {
-            font-size: 18px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .lang-selector:hover {
-            background: rgba(255, 255, 255, 0.3);
         }
 
         @keyframes pulse {
@@ -391,28 +334,6 @@
     </style>
 </head>
 <body>
-    <!-- Language Modal -->
-    <div class="language-modal" id="languageModal">
-        <div class="language-modal-content">
-            <h2 id="langTitle">Choose Language</h2>
-            <p id="langSubtitle">Bienvenue · Welkom · Welcome</p>
-            <div class="language-buttons">
-                <button class="lang-btn" data-lang="fr">
-                    <span class="flag">🇫🇷</span>
-                    Français
-                </button>
-                <button class="lang-btn" data-lang="nl">
-                    <span class="flag">🇳🇱</span>
-                    Nederlands
-                </button>
-                <button class="lang-btn" data-lang="en">
-                    <span class="flag">🇬🇧</span>
-                    English
-                </button>
-            </div>
-        </div>
-    </div>
-
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -425,7 +346,11 @@
                     <div class="status-dot"></div>
                     <span id="statusText">En ligne</span>
                 </div>
-                <button class="lang-selector" id="langBtn" title="Change language">🇫🇷</button>
+                <div class="lang-flags">
+                    <button class="lang-flag-btn active" data-lang="fr" title="Français">🇫🇷</button>
+                    <button class="lang-flag-btn" data-lang="nl" title="Nederlands">🇳🇱</button>
+                    <button class="lang-flag-btn" data-lang="en" title="English">🇬🇧</button>
+                </div>
             </div>
         </div>
 
@@ -500,13 +425,11 @@
             }
         };
 
-        let currentLanguage = localStorage.getItem('chatLanguage') || null;
+        let currentLanguage = localStorage.getItem('chatLanguage') || 'fr';
         const chatArea = document.getElementById('chatArea');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const shortcuts = document.getElementById('shortcuts');
-        const languageModal = document.getElementById('languageModal');
-        const langBtn = document.getElementById('langBtn');
 
         let isLoading = false;
         let hasInteracted = false;
@@ -514,21 +437,14 @@
 
         // Initialize
         function init() {
-            if (!currentLanguage) {
-                languageModal.classList.remove('hidden');
-                setupLanguageButtons();
-            } else {
-                initChat();
-            }
+            setupLanguageButtons();
+            initChat();
         }
 
         function setupLanguageButtons() {
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.onclick = (e) => {
-                    const lang = btn.dataset.lang;
-                    setLanguage(lang);
-                    e.preventDefault();
-                    return false;
+            document.querySelectorAll('.lang-flag-btn').forEach(btn => {
+                btn.onclick = () => {
+                    setLanguage(btn.dataset.lang);
                 };
             });
         }
@@ -536,9 +452,13 @@
         function setLanguage(lang) {
             currentLanguage = lang;
             localStorage.setItem('chatLanguage', lang);
-            languageModal.classList.add('hidden');
+
+            // Update active state
+            document.querySelectorAll('.lang-flag-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+
             updateUI();
-            initChat();
         }
 
         function updateUI() {
@@ -571,15 +491,6 @@
         });
 
         sendBtn.addEventListener('click', sendMessage);
-        langBtn.addEventListener('click', () => {
-            currentLanguage = null;
-            localStorage.removeItem('chatLanguage');
-            chatArea.innerHTML = '';
-            questionHistory = [];
-            localStorage.removeItem('questionHistory');
-            hasInteracted = false;
-            init();
-        });
 
         async function sendMessage() {
             const message = messageInput.value.trim();
