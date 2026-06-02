@@ -516,14 +516,21 @@
         function init() {
             if (!currentLanguage) {
                 languageModal.classList.remove('hidden');
-                document.querySelectorAll('.lang-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        setLanguage(e.target.closest('.lang-btn').dataset.lang);
-                    });
-                });
+                setupLanguageButtons();
             } else {
                 initChat();
             }
+        }
+
+        function setupLanguageButtons() {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    const lang = btn.dataset.lang;
+                    setLanguage(lang);
+                    e.preventDefault();
+                    return false;
+                };
+            });
         }
 
         function setLanguage(lang) {
