@@ -34,6 +34,75 @@
             overflow: hidden;
         }
 
+        /* Language Modal */
+        .language-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .language-modal.hidden {
+            display: none;
+        }
+
+        .language-modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+        }
+
+        .language-modal-content h2 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .language-modal-content p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .language-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .lang-btn {
+            padding: 20px 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .lang-btn:hover {
+            border-color: #1b5e20;
+            background: #f0f8f5;
+            transform: translateY(-2px);
+        }
+
+        .lang-btn .flag {
+            font-size: 32px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
         /* Header */
         .header {
             background: linear-gradient(135deg, #1b5e20 0%, #2d7a2f 100%);
@@ -56,6 +125,12 @@
             opacity: 0.9;
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .status {
             display: flex;
             align-items: center;
@@ -69,6 +144,21 @@
             border-radius: 50%;
             background: #4caf50;
             animation: pulse 2s infinite;
+        }
+
+        .lang-selector {
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-selector:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         @keyframes pulse {
@@ -176,6 +266,16 @@
             color: white;
             border-color: #1b5e20;
             transform: translateY(-2px);
+        }
+
+        .shortcut-btn.suggested {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .shortcut-btn.suggested:hover {
+            background: #ffc107;
+            color: #333;
         }
 
         /* Input Area */
@@ -291,16 +391,41 @@
     </style>
 </head>
 <body>
+    <!-- Language Modal -->
+    <div class="language-modal" id="languageModal">
+        <div class="language-modal-content">
+            <h2 id="langTitle">Choose Language</h2>
+            <p id="langSubtitle">Bienvenue · Welkom · Welcome</p>
+            <div class="language-buttons">
+                <button class="lang-btn" data-lang="fr">
+                    <span class="flag">🇫🇷</span>
+                    Français
+                </button>
+                <button class="lang-btn" data-lang="nl">
+                    <span class="flag">🇳🇱</span>
+                    Nederlands
+                </button>
+                <button class="lang-btn" data-lang="en">
+                    <span class="flag">🇬🇧</span>
+                    English
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Header -->
         <div class="header">
             <div class="header-content">
                 <h1>Prés Gaillard</h1>
-                <p>Gîte à La Bresse</p>
+                <p id="headerSubtitle">Gîte à La Bresse</p>
             </div>
-            <div class="status">
-                <div class="status-dot"></div>
-                <span>En ligne</span>
+            <div class="header-right">
+                <div class="status">
+                    <div class="status-dot"></div>
+                    <span id="statusText">En ligne</span>
+                </div>
+                <button class="lang-selector" id="langBtn" title="Change language">🇫🇷</button>
             </div>
         </div>
 
@@ -308,16 +433,7 @@
         <div class="chat-area" id="chatArea"></div>
 
         <!-- Shortcuts -->
-        <div class="shortcuts" id="shortcuts">
-            <button class="shortcut-btn" data-prompt="Quelles sont les activités disponibles à La Bresse ?">🏔️ Activités</button>
-            <button class="shortcut-btn" data-prompt="Quels sont les horaires d'accès au chalet ?">🕐 Horaires</button>
-            <button class="shortcut-btn" data-prompt="Comment se passe le check-in ?">🔑 Check-in</button>
-            <button class="shortcut-btn" data-prompt="Y a-t-il une cuisine équipée ?">🍳 Cuisine</button>
-            <button class="shortcut-btn" data-prompt="Que faire en cas d'urgence ?">🆘 Urgence</button>
-            <button class="shortcut-btn" data-prompt="Où manger à proximité ?">🍽️ Restaurants</button>
-            <button class="shortcut-btn" data-prompt="Comment accéder au WiFi ?">📡 WiFi</button>
-            <button class="shortcut-btn" data-prompt="Quelle est la politique d'annulation ?">❌ Annulation</button>
-        </div>
+        <div class="shortcuts" id="shortcuts"></div>
 
         <!-- Input Area -->
         <div class="input-area">
@@ -329,14 +445,109 @@
     </div>
 
     <script>
+        // Translations
+        const translations = {
+            fr: {
+                headerSubtitle: "Gîte à La Bresse",
+                statusText: "En ligne",
+                placeholder: "Votre message...",
+                langTitle: "Choisir la langue",
+                langSubtitle: "Bienvenue · Welkom · Welcome",
+                welcome: "🏔️ Bienvenue à Prés Gaillard ! Profitez de votre séjour en montagne. Comment puis-je vous aider ?",
+                welcomeWinter: "🎄 Bienvenue à Prés Gaillard ! Passez un merveilleux séjour hivernal. Comment puis-je vous aider ?",
+                welcomeSummer: "☀️ Bienvenue à Prés Gaillard ! Profitez de l'été en montagne. Comment puis-je vous aider ?",
+                welcomeAutumn: "🍂 Bienvenue à Prés Gaillard ! Les couleurs d'automne sont magnifiques. Comment puis-je vous aider ?"
+            },
+            nl: {
+                headerSubtitle: "Chalet in La Bresse",
+                statusText: "Online",
+                placeholder: "Uw bericht...",
+                langTitle: "Taal kiezen",
+                langSubtitle: "Bienvenue · Welkom · Welcome",
+                welcome: "🏔️ Welkom bij Prés Gaillard! Geniet van uw verblijf in de bergen. Hoe kan ik u helpen?",
+                welcomeWinter: "🎄 Welkom bij Prés Gaillard! Een heerlijk winterverblijf. Hoe kan ik u helpen?",
+                welcomeSummer: "☀️ Welkom bij Prés Gaillard! Geniet van de zomer in de bergen. Hoe kan ik u helpen?",
+                welcomeAutumn: "🍂 Welkom bij Prés Gaillard! De herfstkleurenzijn prachtig. Hoe kan ik u helpen?"
+            },
+            en: {
+                headerSubtitle: "Chalet in La Bresse",
+                statusText: "Online",
+                placeholder: "Your message...",
+                langTitle: "Choose Language",
+                langSubtitle: "Bienvenue · Welkom · Welcome",
+                welcome: "🏔️ Welcome to Prés Gaillard! Enjoy your mountain stay. How can I help?",
+                welcomeWinter: "🎄 Welcome to Prés Gaillard! Have a wonderful winter stay. How can I help?",
+                welcomeSummer: "☀️ Welcome to Prés Gaillard! Enjoy the summer in the mountains. How can I help?",
+                welcomeAutumn: "🍂 Welcome to Prés Gaillard! The autumn colors are beautiful. How can I help?"
+            }
+        };
+
+        const defaultQuestions = {
+            fr: {
+                arrival: ["🔑 Comment fonctionne le check-in ?", "🔑 Où sont les clés ?", "📱 Comment accéder au WiFi ?"],
+                stay: ["🏔️ Quelles activités à La Bresse ?", "🍽️ Où manger à proximité ?", "🆘 Que faire en cas d'urgence ?"],
+                departure: ["🧹 Comment préparer le départ ?", "📞 Qui contacter après ?", "⭐ Comment laisser un avis ?"]
+            },
+            nl: {
+                arrival: ["🔑 Hoe werkt de check-in ?", "🔑 Waar zijn de sleutels ?", "📱 Hoe WiFi-toegang krijgen ?"],
+                stay: ["🏔️ Welke activiteiten in La Bresse ?", "🍽️ Waar eten in de buurt ?", "🆘 Wat doen in geval van nood ?"],
+                departure: ["🧹 Hoe vertrekken voorbereiding ?", "📞 Wie contacteren na ?", "⭐ Hoe een review achterlaten ?"]
+            },
+            en: {
+                arrival: ["🔑 How does check-in work?", "🔑 Where are the keys?", "📱 How to access WiFi?"],
+                stay: ["🏔️ What activities in La Bresse?", "🍽️ Where to eat nearby?", "🆘 What to do in case of emergency?"],
+                departure: ["🧹 How to prepare departure?", "📞 Who to contact after?", "⭐ How to leave a review?"]
+            }
+        };
+
+        let currentLanguage = localStorage.getItem('chatLanguage') || null;
         const chatArea = document.getElementById('chatArea');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const shortcuts = document.getElementById('shortcuts');
-        const shortcutBtns = document.querySelectorAll('.shortcut-btn');
+        const languageModal = document.getElementById('languageModal');
+        const langBtn = document.getElementById('langBtn');
 
         let isLoading = false;
         let hasInteracted = false;
+        let questionHistory = JSON.parse(localStorage.getItem('questionHistory') || '[]');
+
+        // Initialize
+        function init() {
+            if (!currentLanguage) {
+                languageModal.classList.remove('hidden');
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        setLanguage(e.target.closest('.lang-btn').dataset.lang);
+                    });
+                });
+            } else {
+                initChat();
+            }
+        }
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('chatLanguage', lang);
+            languageModal.classList.add('hidden');
+            updateUI();
+            initChat();
+        }
+
+        function updateUI() {
+            const t = translations[currentLanguage];
+            document.getElementById('headerSubtitle').textContent = t.headerSubtitle;
+            document.getElementById('statusText').textContent = t.statusText;
+            messageInput.placeholder = t.placeholder;
+            langBtn.textContent = { fr: '🇫🇷', nl: '🇳🇱', en: '🇬🇧' }[currentLanguage];
+        }
+
+        function initChat() {
+            updateUI();
+            loadWelcomeMessage();
+            updateShortcuts();
+            messageInput.focus();
+        }
 
         // Auto-resize textarea
         messageInput.addEventListener('input', () => {
@@ -344,7 +555,7 @@
             messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
         });
 
-        // Send on Enter (not Shift+Enter)
+        // Send on Enter
         messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -353,45 +564,48 @@
         });
 
         sendBtn.addEventListener('click', sendMessage);
-
-        shortcutBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                messageInput.value = btn.dataset.prompt;
-                messageInput.style.height = 'auto';
-                sendMessage();
-            });
+        langBtn.addEventListener('click', () => {
+            currentLanguage = null;
+            localStorage.removeItem('chatLanguage');
+            chatArea.innerHTML = '';
+            questionHistory = [];
+            localStorage.removeItem('questionHistory');
+            hasInteracted = false;
+            init();
         });
 
         async function sendMessage() {
             const message = messageInput.value.trim();
             if (!message || isLoading) return;
 
-            // Add user message
             addMessage(message, 'user');
+            questionHistory.push({ q: message, t: Date.now() });
+            localStorage.setItem('questionHistory', JSON.stringify(questionHistory));
+
             messageInput.value = '';
             messageInput.style.height = 'auto';
             isLoading = true;
             sendBtn.disabled = true;
 
-            // Hide shortcuts after first message
             if (!hasInteracted) {
                 shortcuts.classList.add('hidden');
                 hasInteracted = true;
             }
 
-            // Show loading indicator
             const loadingId = addMessage('', 'host', true);
 
             try {
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
+                    body: JSON.stringify({
+                        message,
+                        language: currentLanguage,
+                        questionHistory: questionHistory.map(h => h.q)
+                    })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const data = await response.json();
                 removeMessage(loadingId);
@@ -400,16 +614,48 @@
                     addMessage('Erreur: ' + data.error, 'host');
                 } else {
                     addMessage(data.reply, 'host');
+                    updateShortcuts();
                 }
             } catch (error) {
                 removeMessage(loadingId);
-                addMessage('Désolé, une erreur s\'est produite. Veuillez réessayer.', 'host');
+                addMessage('Une erreur s\'est produite. Veuillez réessayer.', 'host');
                 console.error('Error:', error);
             } finally {
                 isLoading = false;
                 sendBtn.disabled = false;
                 messageInput.focus();
             }
+        }
+
+        function updateShortcuts() {
+            shortcuts.innerHTML = '';
+
+            const allQuestions = defaultQuestions[currentLanguage];
+            const askedQuestions = questionHistory.map(h => h.q.toLowerCase());
+
+            // Pick questions that haven't been asked much
+            const availableQuestions = [];
+            for (const phase in allQuestions) {
+                for (const q of allQuestions[phase]) {
+                    if (!askedQuestions.some(asked => q.toLowerCase().includes(asked.split(' ')[0]))) {
+                        availableQuestions.push(q);
+                    }
+                }
+            }
+
+            // Show 4 random available questions
+            const selected = availableQuestions.sort(() => Math.random() - 0.5).slice(0, 4);
+
+            selected.forEach(q => {
+                const btn = document.createElement('button');
+                btn.className = 'shortcut-btn';
+                btn.textContent = q;
+                btn.addEventListener('click', () => {
+                    messageInput.value = q;
+                    sendMessage();
+                });
+                shortcuts.appendChild(btn);
+            });
         }
 
         function addMessage(text, sender, isLoading = false) {
@@ -439,28 +685,17 @@
             return div.innerHTML;
         }
 
-        // Load welcome message
         function loadWelcomeMessage() {
             const now = new Date();
             const month = now.getMonth();
-            let welcome;
+            const key = month >= 11 || month === 0 ? 'welcomeWinter' :
+                       month >= 5 && month <= 7 ? 'welcomeSummer' :
+                       month === 8 || month === 9 ? 'welcomeAutumn' : 'welcome';
 
-            if (month >= 11 || month === 0) {
-                welcome = '🎄 Bienvenue à Prés Gaillard ! Passez un merveilleux séjour hivernal à La Bresse. Comment puis-je vous aider ?';
-            } else if (month >= 5 && month <= 7) {
-                welcome = '☀️ Bienvenue à Prés Gaillard ! Profitez de l\'été en montagne. Que puis-je faire pour vous ?';
-            } else if (month === 8 || month === 9) {
-                welcome = '🍂 Bienvenue à Prés Gaillard ! Les feuilles d\'automne sont magnifiques. Comment puis-je vous aider ?';
-            } else {
-                welcome = '🌸 Bienvenue à Prés Gaillard ! Profitez de votre séjour printanier. Que puis-je faire pour vous ?';
-            }
-
-            addMessage(welcome, 'host');
+            addMessage(translations[currentLanguage][key], 'host');
         }
 
-        // Initialize
-        loadWelcomeMessage();
-        messageInput.focus();
+        init();
     </script>
 </body>
 </html>
